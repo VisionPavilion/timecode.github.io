@@ -6,23 +6,60 @@
     <title>Timecode Adder</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
             padding: 20px;
             max-width: 600px;
             margin: auto;
         }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
         label {
             display: block;
             margin: 10px 0 5px;
+            font-weight: 500;
+            color: #2c3e50;
         }
         input {
-            width: 100%;
-            padding: 8px;
+            width: calc(100% - 16px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
             margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         button {
-            padding: 10px 15px;
+            padding: 10px 20px;
             font-size: 16px;
+            color: #fff;
+            background-color: #3498db;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+            box-shadow: 0 6px 8px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 20px;
+            color: #2c3e50;
+        }
+        p#result {
+            font-size: 24px;
+            font-weight: 700;
+            background-color: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
     </style>
 </head>
@@ -43,15 +80,20 @@
         const FRAME_RATE = 30; // Define your frame rate here
 
         function parseTimecode(timecode) {
-            // Validate input format
             const regex = /^(\d{2}):(\d{2}):(\d{2}):(\d{2})$/;
             const match = timecode.match(regex);
             if (!match) {
                 alert("Invalid timecode format. Please use HH:MM:SS:FF format.");
-                return 0;
+                return -1; // Return -1 to indicate an error
             }
 
             const [ , hours, minutes, seconds, frames ] = match.map(Number);
+
+            if (hours < 0 || hours >= 24 || minutes < 0 || minutes >= 60 || seconds < 0 || seconds >= 60 || frames < 0 || frames >= FRAME_RATE) {
+                alert("Timecode values out of range. Please use valid values.");
+                return -1;
+            }
+
             return (hours * 3600 * FRAME_RATE) + (minutes * 60 * FRAME_RATE) + (seconds * FRAME_RATE) + frames;
         }
 
@@ -59,7 +101,7 @@
             const hours = Math.floor(totalFrames / (3600 * FRAME_RATE));
             const minutes = Math.floor((totalFrames % (3600 * FRAME_RATE)) / (60 * FRAME_RATE));
             const seconds = Math.floor((totalFrames % (60 * FRAME_RATE)) / FRAME_RATE);
-            const frames = Math.round(totalFrames % FRAME_RATE);
+            const frames = totalFrames % FRAME_RATE;
 
             return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}:${String(frames).padStart(2, '0')}`;
         }
@@ -70,6 +112,8 @@
 
             const frames1 = parseTimecode(timecode1);
             const frames2 = parseTimecode(timecode2);
+
+            if (frames1 === -1 || frames2 === -1) return; // Stop execution if there is an error
 
             const totalFrames = frames1 + frames2;
             const resultTimecode = formatTimecode(totalFrames);
